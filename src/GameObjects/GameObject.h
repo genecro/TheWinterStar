@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 
+
 class GameObject
 {
 public:
@@ -29,4 +30,7 @@ public:
     int id_;
 
     bool isSolid_;
+
+    float downwardVel;
+    float terminalVel;
 };

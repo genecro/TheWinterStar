@@ -1,6 +1,7 @@
-#include "GameObject.h"
-#include "../collision.h"
+//#include "GameObject.h"
+//#include "../collision.h"
 #include "../globals.h"
+#include "../collision.h"
 
 GameObject::GameObject() {
     isSolid_ = false;

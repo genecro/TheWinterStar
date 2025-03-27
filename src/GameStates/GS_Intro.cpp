@@ -1,4 +1,5 @@
-#include "GS_Intro.h"
+//#include "GS_Intro.h"
+#include "GS.h"
 
 GS_Intro::GS_Intro() {
     //start_time = timer_ticks();

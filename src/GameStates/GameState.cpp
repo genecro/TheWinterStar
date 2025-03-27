@@ -164,7 +164,7 @@ void GameState::updateCamera() {
         global::thePlayer->position_.z + camera.distanceFromPlayer * fm_cosf(camera.rotAngle)
     }};
 
-    camera.target = global::thePlayer->position_;
+    camera.target = global::thePlayer->position_ - (T3DVec3){{0, global::thePlayer->objectWidth_, 0}};
 
     if(global::thePlayer->camState_.closeness==CAM_MID) {
         camera.target += {{0,5,0}};

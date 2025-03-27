@@ -4,18 +4,8 @@ BUILD_DIR=build
 include $(N64_INST)/include/n64.mk
 include tiny3d/t3d.mk
 N64_CXXFLAGS = -std=c++17 -std=gnu++20 -fpermissive
-#srcFiles = $(wildcard src/*.cpp)
 srcFiles = $(wildcard $(SOURCE_DIR)/*/*.cpp) $(wildcard $(SOURCE_DIR)/*.cpp)
 
-#OBJS =  $(BUILD_DIR)/globals.o \
-		$(BUILD_DIR)/State.o \
-		$(BUILD_DIR)/MainMenuState.o \
-		$(BUILD_DIR)/IntroState.o \
-		$(BUILD_DIR)/Fonts.o \
-		$(BUILD_DIR)/main.o
-		
-
-#OBJS = $(srcFiles:%.cpp=$(BUILD_DIR)/%.o)
 OBJS = $(srcFiles:$(SOURCE_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 assets_logos	= $(wildcard assets/logos/*.png)
@@ -28,7 +18,8 @@ assets_conv		= $(addprefix filesystem/,$(notdir $(assets_logos:%.png=%.sprite)))
 				  $(addprefix filesystem/sprites/,$(notdir $(assets_sprites:%.png=%.sprite))) \
 				  $(addprefix filesystem/sprites/RGBA32/,$(notdir $(assets_sprites_RGBA32:%.png=%.sprite))) \
 				  $(addprefix filesystem/,$(notdir $(assets_fonts:%.ttf=%.font64))) \
-				  $(addprefix filesystem/,$(notdir $(assets_gltf:%.glb=%.t3dm)))
+				  $(addprefix filesystem/,$(notdir $(assets_gltf:%.glb=%.t3dm))) \
+				  $(wildcard filesystem/*.bin)
 
 all: stargard.z64
 
@@ -67,14 +58,16 @@ filesystem/%.t3dm: assets/models/%.glb
 	$(T3D_GLTF_TO_3D) "$<" $@
 	$(N64_BINDIR)/mkasset -c 2 -o filesystem $@
 
+filesystem/%.bin: assets/models/%.glb
+	@mkdir -p $(dir $@)
+	@echo "    [COLL] $@"
+	tools/save_triangles/save_triangles $< $@
+
 $(BUILD_DIR)/stargard.dfs: $(assets_conv)
 $(BUILD_DIR)/stargard.elf: $(OBJS)
 
-#$(BUILD_DIR)/stargard.elf: $(srcFiles:%.cpp=$(BUILD_DIR)/%.o)
-
 stargard.z64: N64_ROM_TITLE="Stargard"
 stargard.z64: $(BUILD_DIR)/stargard.dfs
-
 
 
 clean:

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GameObject.h"
-#include "../globals.h"
+//#include "../globals.h"
 
 class GO_NPC: public GameObject {
 public:

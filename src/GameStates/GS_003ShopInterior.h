@@ -22,9 +22,7 @@ private:
     uint8_t colorAmbient[4] = {80, 80, 100, 0xFF};
 
     T3DViewport viewport;
-    T3DMat4 envMat;
     T3DMat4FP* envMatFP;
-    T3DModel* envModel;
 
     void initCamera() override;
     void handleInputCamera() override;

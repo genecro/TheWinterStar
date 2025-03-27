@@ -2,8 +2,9 @@
 
 #include <libdragon.h>
 #include <vector>
-#include "../collision.h"
+//#include "../collision.h"
 #include "../GameObjects/GameObjectList.h"
+#include "../collision.h"
 
 class GameState
 {
@@ -19,15 +20,22 @@ public:
 
     virtual void testFunc() = 0;
 
-    std::vector<AABB> mapColl_;
+    //std::vector<AABB> mapColl_;
 
     //std::vector<GameObject*>* objectList;
     GameObjectList* objectList;
+
+    T3DModel* envModel;
+    T3DMat4 envMat;
+
+    std::vector<Triangle> collisionTris;
     
 
 protected:
     static const int AUDIO_CHANNEL_SFX = 0;
     static const int AUDIO_CHANNEL_MUSIC = 1;
+
+    float envScale;
 
     uint64_t endTime;
 

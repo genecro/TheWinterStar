@@ -2,3 +2,4 @@ libdragon/
 build/
 filesystem/
 tiny3d/
+tinygltf/

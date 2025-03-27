@@ -2,7 +2,7 @@
 #include <libdragon.h>
 #include "../Fonts.h"
 #include "GameInterrupt.h"
-#include "../globals.h"
+//#include "../globals.h"
 
 class GI_Pause : public GameInterrupt
 {

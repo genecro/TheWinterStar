@@ -1,6 +1,7 @@
 //#include "GS_MainMenu.h"
 //#include "GS_001ChurchSquare.h"
 #include "GS.h"
+#include "../globals.h"
 
 enum {
     MENU_ITEM_NEW_GAME = 0,
