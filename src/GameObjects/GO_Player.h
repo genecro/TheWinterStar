@@ -37,4 +37,5 @@ protected:
     rspq_block_t *dplPlayer;
 
     T3DVec3 moveDir;
+    bool grounded;
 };

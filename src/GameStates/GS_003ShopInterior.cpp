@@ -2,6 +2,7 @@
 #include "../GameObjects/GO.h"
 #include "../GameInterrupts/GI.h"
 #include "../globals.h"
+#include "../collision.h"
 
 GS_001ChurchSquare::startPos_t GS_001ChurchSquare::startPos;
 
@@ -10,10 +11,24 @@ GS_003ShopInterior::GS_003ShopInterior(T3DVec3 startingPlayerPos) {
     t3d_mat4_identity(&envMat);
     envMatFP = (T3DMat4FP*)malloc_uncached(sizeof(T3DMat4FP));
     envModel = t3d_model_load("rom:/shopInterior.t3dm");
+    collisionTris = collision::loadCollTriangles("rom:/shopInterior.bin");
+    /*debugf("BEFORE SCALING***************\n");
+    for (auto tri : collisionTris) {
+        debugf("v0 x: %.2f, y: %.2f, z: %.2f\n", tri.v0.x, tri.v0.y, tri.v0.z);
+        debugf("v1 x: %.2f, y: %.2f, z: %.2f\n", tri.v1.x, tri.v1.y, tri.v1.z);
+        debugf("v2 x: %.2f, y: %.2f, z: %.2f\n\n", tri.v2.x, tri.v2.y, tri.v2.z);
+    }*/
+    collision::scaleTriangles(&collisionTris, 0.05f);
+    /*debugf("AFTER SCALING****************\n");
+    for (auto tri : collisionTris) {
+        debugf("v0 x: %.2f, y: %.2f, z: %.2f\n", tri.v0.x, tri.v0.y, tri.v0.z);
+        debugf("v1 x: %.2f, y: %.2f, z: %.2f\n", tri.v1.x, tri.v1.y, tri.v1.z);
+        debugf("v2 x: %.2f, y: %.2f, z: %.2f\n\n", tri.v2.x, tri.v2.y, tri.v2.z);
+    }*/
 
     t3d_viewport_set_projection(viewport, 75.0f, 20.0f, 200.0f);
 
-    global::thePlayer->position_ = startingPlayerPos;
+    global::thePlayer->position_ = startingPlayerPos + (T3DVec3){{0, global::thePlayer->objectWidth_, 0}};
 
     initCamera();
 
@@ -45,6 +60,8 @@ void GS_003ShopInterior::handleInput() {
 void GS_003ShopInterior::update() {
     global::thePlayer->update();
     updateCamera();
+
+    
 
     t3d_mat4_from_srt_euler(&envMat,
         (float[3]){ 0.05f, 0.05f, 0.05f},

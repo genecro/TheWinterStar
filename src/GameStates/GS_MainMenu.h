@@ -12,7 +12,7 @@
 //#include "GS_Intro.h"
 //#include "GS_001ChurchSquare.h"
 #include "../Fonts.h"
-#include "../globals.h"
+//#include "../globals.h"
 
 
 #define NUM_MENU_CHOICES 5

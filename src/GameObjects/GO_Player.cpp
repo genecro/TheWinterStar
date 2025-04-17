@@ -1,5 +1,6 @@
 //#include "GO_Player.h"
 #include "../globals.h"
+#include "../collision.h"
 
 #define STICK_DEADZONE 8
 #define INTERACTION_DISTANCE 1
@@ -11,6 +12,10 @@ GO_Player::GO_Player(std::string name) {
     position_ = {{0.0f,0.0f,0.0f}};
     moveDir = {{0,0,0}};
     rotation_ = 0.0f;
+    objectWidth_ = 3.0f;
+    downwardVel = 0.0f;
+    terminalVel = objectWidth_ * 0.9f;
+    grounded = true;
 
     t3d_mat4_identity(&playerMat);
     playerMatFP = (T3DMat4FP*)malloc_uncached(sizeof(T3DMat4FP));
@@ -45,10 +50,31 @@ void GO_Player::handleInput() {
         moveDir = {{0,0,0}};
     }
 
-    t3d_vec3_add(&position_, &position_, &moveDir);
+    if(joypad.btn.l) {
+        downwardVel = 0.0f;
+        moveDir += {{0, 0.5f*global::frameTimeMultiplier, 0}};
+    }
+    else {
+        if(grounded) {
+            downwardVel = 0.0f;
+        }
+        else {
+            if(downwardVel < terminalVel) {
+                downwardVel += 0.1f;
+            }
+            moveDir.y -= downwardVel * global::frameTimeMultiplier;
+        }
+    }
+
+    //moveDir = collision::resolveWallCollision(position_, fmaxf(objectWidth_, downwardVel*global::frameTimeMultiplier), global::gameState->collisionTris, T3D_PI/3.0f, moveDir, &grounded);
+    moveDir = collision::resolveWallCollisionLoop(position_, fmaxf(objectWidth_, downwardVel*global::frameTimeMultiplier), global::gameState->collisionTris, T3D_PI/3.0f, moveDir, &grounded);
+    
+    position_ += moveDir;
 }
 
 void GO_Player::update() {
+    
+
     if(rotation_ > T3D_PI) {
         rotation_ -= 2*T3D_PI;
     }
@@ -60,7 +86,7 @@ void GO_Player::update() {
     t3d_mat4_from_srt_euler(&playerMat,
       (float[3]){0.05f, 0.05f, 0.05f},
       (float[3]){0.0f, rotation_, 0.0f},
-      position_.v
+      (position_-(T3DVec3){{0, objectWidth_, 0}}).v
     );
     t3d_mat4_to_fixed(playerMatFP, &playerMat);
 }

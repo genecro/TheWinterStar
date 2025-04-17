@@ -11,6 +11,8 @@ GS_002ChurchInterior::GS_002ChurchInterior(T3DVec3 playerStartingPos) {
     t3d_mat4_identity(&envMat);
     envMatFP = (T3DMat4FP*)malloc_uncached(sizeof(T3DMat4FP));
     envModel = t3d_model_load("rom:/churchInterior.t3dm");
+    collisionTris = collision::loadCollTriangles("rom:/churchInterior.bin");
+    collision::scaleTriangles(&collisionTris, 0.1f);
     //envModel = t3d_model_load("rom:/churchInteriorFixed.t3dm");
     //envModel = t3d_model_load("rom:/churchInteriorCull.t3dm");
 
@@ -25,7 +27,7 @@ GS_002ChurchInterior::GS_002ChurchInterior(T3DVec3 playerStartingPos) {
 
     t3d_viewport_set_projection(viewport, 75.0f, 20.0f, 200.0f);
 
-    global::thePlayer->position_ = playerStartingPos;
+    global::thePlayer->position_ = playerStartingPos + (T3DVec3){{0, global::thePlayer->objectWidth_, 0}};
 
     initCamera();
     global::thePlayer->camState_.closeness = CAM_MID;
@@ -37,6 +39,7 @@ GS_002ChurchInterior::GS_002ChurchInterior(T3DVec3 playerStartingPos) {
     objectList->push(new GO_Monk("Black Monk", {{12,0,-162.0f}}, T3D_PI*0.25, RGBA32(0, 0, 0, 0xFF)));
     objectList->push(new GO_Monk("White Monk", {{-12,0,-162.0f}}, -T3D_PI*0.25, RGBA32(0xFF, 0xFF, 0xFF, 0xFF)));
     objectList->push(new GO_Portal<GS_001ChurchSquare>((T3DVec3){{0,0,130}}, 0, 24, GS_001ChurchSquare::startPos.CHURCH_INTERIOR));
+    objectList->push(new GO_Portal<GS_004ForestA>((T3DVec3){{118, 0, -83.5}}, T3D_PI/2.0f, 24, {{0,0,0}}));
 
     global::GameInterruptStack->push_back(new GI_FadeIn());
 }

@@ -2,8 +2,8 @@
 #include <libdragon.h>
 #include "../Fonts.h"
 #include "GameInterrupt.h"
-#include "../globals.h"
-#include "../GameStates/GameState.h"
+//#include "../globals.h"
+//#include "../GameStates/GameState.h"
 
 class GI_FadeIn : public GameInterrupt
 {

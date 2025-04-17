@@ -25,7 +25,5 @@ private:
     //uint8_t colorAmbient[4] = {20, 20, 50, 0xFF};
 
     T3DViewport viewport;
-    T3DMat4 envMat;
     T3DMat4FP* envMatFP;
-    T3DModel* envModel;
 };

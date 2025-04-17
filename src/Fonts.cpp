@@ -35,6 +35,9 @@ void Fonts::fonts_init() {
     rdpq_font_style(pixelfraktur, FONTSTYLE_RED, &(rdpq_fontstyle_t){
         .color = RGBA32(0xFF, 0x00, 0x00, 0xFF),
     });
+    rdpq_font_style(pixelfraktur, FONTSTYLE_ORANGE, &(rdpq_fontstyle_t){
+        .color = RGBA32(0xF8, 0x7D, 0x36, 0xFF),
+    });
     rdpq_font_style(pixelfraktur, FONTSTYLE_BLUE, &(rdpq_fontstyle_t){
         .color = RGBA32(0x66, 0x66, 0xFF, 0xFF),
     });

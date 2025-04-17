@@ -10,7 +10,7 @@
 #include "Fonts.h"
 #include "GameInterrupts/GI_Pause.h"
 
-surface_t* disp;
+
 
 int main(void)
 {
@@ -51,14 +51,12 @@ int main(void)
     debugf("Entering main loop\n");
     while(1) {
         start = get_ticks();
-        disp = display_get();
+        global::disp = display_get();
         surface_t* zbuf = display_get_zbuf();
         //rdpq_attach(disp, &zbuffer);
-        rdpq_attach_clear(disp, zbuf);
+        rdpq_attach_clear(global::disp, zbuf);
 
         joypad_poll();
-
-        //global::input = joypad_get_inputs(JOYPAD_PORT_1);
 
         //remove interrupts that are finished
         for (int i = 0; i < global::GameInterruptStack->size(); i++) {
@@ -130,6 +128,9 @@ int main(void)
         rdpq_text_printf(&(rdpq_textparms_t){}, FONT_FREE_12, display_get_width()-110, 37, "Total: %d", heapStats.total);
         rdpq_text_printf(&(rdpq_textparms_t){}, FONT_FREE_12, display_get_width()-110, 49, "Used:  %d", heapStats.used);
         rdpq_text_printf(&(rdpq_textparms_t){}, FONT_FREE_12, display_get_width()-110, 61, "Ratio: %.2f%%", 100.0f*heapStats.used/heapStats.total);
+        if(global::gameState && global::gameState->envModel) {
+            rdpq_text_printf(&(rdpq_textparms_t){}, FONT_FREE_12, display_get_width()-110, 73, "EnvVertCt: %d", global::gameState->envModel->totalVertCount);
+        }
         
 
 

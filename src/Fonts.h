@@ -15,6 +15,7 @@ enum {
     FONTSTYLE_RED = 2,
     FONTSTYLE_BLUE = 3,
     FONTSTYLE_GREY = 4,
+    FONTSTYLE_ORANGE = 5,
 };
 
 class Fonts

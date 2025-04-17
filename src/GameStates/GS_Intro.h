@@ -1,6 +1,7 @@
 #pragma once
 #include <libdragon.h>
-#include "GS_MainMenu.h"
+//#include "GS_MainMenu.h"
+#include "GameState.h"
 
 #define INTRO_STEP_TIME 2500.0f
 #define INTRO_FADE_TIME 1000.0f

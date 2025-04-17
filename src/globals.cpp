@@ -9,5 +9,6 @@ namespace global
     float usPerFrame = 16700.0f;
     const float US_60FPS = 16700.0f;
     float frameTimeMultiplier;
+    surface_t* disp;
     //joypad_inputs_t input;
 }

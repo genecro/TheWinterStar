@@ -5,6 +5,7 @@
 #include "../GameObjects/GO.h"
 #include "../GameInterrupts/GI.h"
 #include "GS.h"
+#include "../globals.h"
 
 GS_002ChurchInterior::startPos_t GS_002ChurchInterior::startPos;
 GS_003ShopInterior::startPos_t GS_003ShopInterior::startPos;
@@ -15,10 +16,12 @@ GS_001ChurchSquare::GS_001ChurchSquare(T3DVec3 playerStartingPos) {
     t3d_mat4_identity(&envMat);
     envMatFP = (T3DMat4FP*)malloc_uncached(sizeof(T3DMat4FP));
     envModel = t3d_model_load("rom:/chTwHTx.t3dm");
-
+    collisionTris = collision::loadCollTriangles("rom:/chTwHTx.bin");
+    collision::scaleTriangles(&collisionTris, 0.1f);
+    //collisionTris = loadCollTriangles("rom:/chTwHTx.bin");
     t3d_viewport_set_projection(viewport, 75.0f, 20.0f, 200.0f);
 
-    global::thePlayer->position_ = playerStartingPos;
+    global::thePlayer->position_ = playerStartingPos + (T3DVec3){{0, global::thePlayer->objectWidth_, 0}};
 
     initCamera();
     global::thePlayer->camState_.closeness = CAM_MID;
@@ -52,7 +55,8 @@ void GS_001ChurchSquare::handleInput() {
     //    objectList->push(new GO_Flowers(global::thePlayer->position_, ((float)rand()/RAND_MAX)*2.0f*T3D_PI, RGBA32(255*((float)rand()/RAND_MAX), 255*((float)rand()/RAND_MAX), 255*((float)rand()/RAND_MAX), 0xFF)));
     //}
     if(keys.start) {
-        global::GameInterruptStack->push_back(new GI_Pause());
+        //global::GameInterruptStack->push_back(new GI_Pause());
+        global::GameInterruptStack->push_back(new GI_Reckoner());
     }
     global::thePlayer->handleInput();
     handleInputCamera();
@@ -61,7 +65,7 @@ void GS_001ChurchSquare::handleInput() {
 }
 
 void GS_001ChurchSquare::update() {
-    check_map_collision(&global::thePlayer->position_, mapColl_, MAP_COLL_AABB_COUNT);
+    //check_map_collision(&global::thePlayer->position_, mapColl_, MAP_COLL_AABB_COUNT);
     global::thePlayer->update();
     updateCamera();
 
