@@ -19,4 +19,6 @@ class NumberGlyphDrawer
     private:
         sprite_t *numLine;
         std::vector<sprite_t*> *numberSprites;
+
+        uint8_t SPRITE_WIDTH, LINE_WIDTH;
 };
