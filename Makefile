@@ -10,6 +10,7 @@ OBJS = $(srcFiles:$(SOURCE_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 assets_logos	= $(wildcard assets/logos/*.png)
 assets_sprites	= $(wildcard assets/sprites/*.png)
+assets_sprites_I4 = $(wildcard assets/sprites/I4/*.png)
 assets_sprites_RGBA32 = $(wildcard assets/sprites/RGBA32/*.png)
 assets_fonts	= $(wildcard assets/fonts/*.ttf)
 assets_gltf		= $(wildcard assets/models/*.glb)
@@ -17,6 +18,7 @@ assets_gltf		= $(wildcard assets/models/*.glb)
 assets_conv		= $(addprefix filesystem/,$(notdir $(assets_logos:%.png=%.sprite))) \
 				  $(addprefix filesystem/sprites/,$(notdir $(assets_sprites:%.png=%.sprite))) \
 				  $(addprefix filesystem/sprites/RGBA32/,$(notdir $(assets_sprites_RGBA32:%.png=%.sprite))) \
+				  $(addprefix filesystem/sprites/I4/,$(notdir $(assets_sprites_I4:%.png=%.sprite))) \
 				  $(addprefix filesystem/,$(notdir $(assets_fonts:%.ttf=%.font64))) \
 				  $(addprefix filesystem/,$(notdir $(assets_gltf:%.glb=%.t3dm))) \
 				  $(wildcard filesystem/*.bin)
@@ -35,6 +37,12 @@ filesystem/sprites/%.sprite: assets/sprites/%.png
 	@echo "    [SPRITE CI4] $@"
 	@$(N64_MKSPRITE) $(MKSPRITE_CI4_FLAGS) -o filesystem/sprites "$<"
 
+MKSPRITE_CI4_FLAGS=--format I4 --verbose
+filesystem/sprites/I4/%.sprite: assets/sprites/I4/%.png
+	@mkdir -p $(dir $@)
+	@echo "    [SPRITE I4] $@"
+	@$(N64_MKSPRITE) $(MKSPRITE_CI4_FLAGS) -o filesystem/sprites/I4 "$<"
+
 MKSPRITE_RGBA32_FLAGS=--format RGBA32 --verbose
 filesystem/sprites/RGBA32/%.sprite: assets/sprites/RGBA32/%.png
 	@mkdir -p $(dir $@)
@@ -47,6 +55,7 @@ filesystem/%.font64: assets/fonts/%.ttf
 	@$(N64_MKFONT) $(MKFONT_FLAGS) -o filesystem "$<"
 
 filesystem/PixelFraktur.font64:	MKFONT_FLAGS+=--size 36
+filesystem/PixelFraktur16.font64: MKFONT_FLAGS+=--size 16
 filesystem/Tannenberg.font64:	MKFONT_FLAGS+=--size 20
 filesystem/FreePixel.font64:	MKFONT_FLAGS+=--size 12
 filesystem/OwreKynge.font64:	MKFONT_FLAGS+=--size 16

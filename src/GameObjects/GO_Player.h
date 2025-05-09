@@ -28,7 +28,12 @@ public:
 
     struct inventory_t {
         uint8_t keys;
+        uint16_t coins;
+        std::map<int, int> items;
     } inventory_;
+
+    int removeItem(int id, int qty);
+    int addItem(int id, int qty);
 
 protected:
     T3DMat4 playerMat;

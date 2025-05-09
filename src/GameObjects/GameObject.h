@@ -7,6 +7,7 @@
 #include <t3d/t3ddebug.h>
 #include <string>
 #include <memory>
+#include <map>
 
 
 class GameObject

@@ -8,6 +8,7 @@ enum {
     FONT_OWREKYNGE_14 = 4,
     FONT_BLACKFOREST_14 = 5,
     FONT_LEIPZIG_14 = 6,
+    FONT_PIXELFRAKTUR_16 = 7,
 };
 
 enum {
