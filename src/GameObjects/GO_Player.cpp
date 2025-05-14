@@ -25,7 +25,7 @@ GO_Player::GO_Player(std::string name) {
     t3d_model_draw(modelPlayer);
     dplPlayer = rspq_block_end();
 
-    inventory_.items = std::map<int, int>();
+    inventory_.items = new std::map<int, int>();
 }
 
 GO_Player::~GO_Player() {
@@ -129,15 +129,15 @@ bool GO_Player::isTouching(T3DVec3 target, float targetWidth) {
 }
 
 int GO_Player::removeItem(int id, int qty) {
-    if(inventory_.items.count(id) > 0) {
-        int diff = inventory_.items.at(id) - qty;
+    if(inventory_.items->count(id) > 0) {
+        int diff = inventory_.items->at(id) - qty;
         if(diff > 0) {
-            inventory_.items.at(id) = diff;
+            inventory_.items->at(id) = diff;
             return qty;
         }
         else {
-            int numItems = inventory_.items.at(id);
-            inventory_.items.erase(id);
+            int numItems = inventory_.items->at(id);
+            inventory_.items->erase(id);
             return numItems;
         }
     }
@@ -145,12 +145,12 @@ int GO_Player::removeItem(int id, int qty) {
 }
 
 int GO_Player::addItem(int id, int qty) {
-    if(inventory_.items.count(id) > 0) {
-        inventory_.items.at(id) += qty;
+    if(inventory_.items->count(id) > 0) {
+        inventory_.items->at(id) += qty;
         return qty;
     }
     else {
-        inventory_.items.emplace(id, qty);
+        inventory_.items->emplace(id, qty);
         return qty;
     }
 }

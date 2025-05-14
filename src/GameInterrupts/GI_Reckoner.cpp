@@ -1,14 +1,24 @@
 #include "GI_Reckoner.h"
+#include "../globals.h"
 
 #define STICK_DEADZONE 8
 #define TOP_MENU_NUM_ITEMS 3
+#define SCREEN_UPPER_LEFT_X 120
+#define SCREEN_UPPER_LEFT_Y 80
+#define SCREEN_UPPER_RIGHT_X 260
+#define INVENTORY_LINE_HEIGHT 20
+#define INVENTORY_ICON_WIDTH 20
+#define INVENTORY_NAME_TEXT_WIDTH 70
+#define QTY_TEXT_BOX_WIDTH 60
+#define QTY_GLYPH_SCALE 2
+#define QTY_GLYPH_WIDTH 10*QTY_GLYPH_SCALE
+#define INV_SLOTS_TO_DISPLAY 5
 
 enum {
     TOP_MENU = -1,
     MAP_STATE = 0,
     INV_STATE = 1,
     WB_STATE = 2,
-
 };
 
 GI_Reckoner::GI_Reckoner() {
@@ -29,10 +39,14 @@ GI_Reckoner::GI_Reckoner() {
 
     topMenu_t.index = 0;
 
-    invMenu_t.invNum = 3333;
-    invMenu_t.scale = 2.0;
+    invMenu_t.inventoryIndex = 0;
+    invMenu_t.slotsSkipped = 0;
 
     glyphDrawer = new NumberGlyphDrawer();
+
+    playerInv = global::thePlayer->inventory_.items;
+
+    inventoryLookup = new Inventory();
 }
 
 GI_Reckoner::~GI_Reckoner() {
@@ -44,6 +58,7 @@ GI_Reckoner::~GI_Reckoner() {
     sprite_free(invSpriteDark);
     sprite_free(mapSpriteDark);
     delete glyphDrawer;
+    delete inventoryLookup;
 }
 
 void GI_Reckoner::handleInput() {
@@ -89,28 +104,32 @@ void GI_Reckoner::handleInput() {
                 currState = TOP_MENU;
             }
 
-            if(keys.r) {
-                if(invMenu_t.scale < 16) {
-                    invMenu_t.scale += 1.0f;
-                }
-            }
-
-            if(keys.l) {
-                if(invMenu_t.scale > 0) {
-                    invMenu_t.scale -= 1.0f;
-                }
-            }
-
             if(keys.start) {
                 timeToDestroy = true;
             }
 
-            if(yAxisHeld>0) {
-                invMenu_t.invNum++;
+            if(keys.a) {
+
             }
-            else if (yAxisHeld < 0) {
-                if(invMenu_t.invNum > 0) {
-                    invMenu_t.invNum--;
+
+            if(yAxisPressed < 0) {
+                if(invMenu_t.inventoryIndex + invMenu_t.slotsSkipped < global::thePlayer->inventory_.items->size() - 1) {
+                    if(invMenu_t.inventoryIndex == INV_SLOTS_TO_DISPLAY - 1) {
+                        invMenu_t.slotsSkipped++;
+                    }
+                    else {
+                        invMenu_t.inventoryIndex++;
+                    }
+                }
+            }
+            else if(yAxisPressed > 0) {
+                if(invMenu_t.inventoryIndex + invMenu_t.slotsSkipped != 0){
+                    if(invMenu_t.inventoryIndex == 0) {
+                        invMenu_t.slotsSkipped--;
+                    }
+                    else {
+                        invMenu_t.inventoryIndex--;
+                    }
                 }
             }
             break;
@@ -137,14 +156,8 @@ void GI_Reckoner::renderT3d() {
 
 void GI_Reckoner::renderRdpq() {
     rdpq_sync_pipe();
-    //debugf("setting mode\n");
     rdpq_set_mode_standard();
-    //debugf("setting alpha compare\n");
     rdpq_mode_alphacompare(1);
-    //debugf("setting mode blender\n");
-    //rdpq_mode_combiner(RDPQ_COMBINER_FLAT);
-    //rdpq_mode_blender(RDPQ_BLENDER_MULTIPLY);
-    //debugf("blitting sprite\n");
     rdpq_sprite_blit(bgSprite, display_get_width()/2.0f, display_get_height()/2.0f, &(rdpq_blitparms_t){
         .cx = bgSprite->width/2.0,
         .cy = bgSprite->height/2.0,
@@ -168,8 +181,6 @@ void GI_Reckoner::renderRdpq() {
         .scale_x=2,
         .scale_y=2,
     });
-    //debugf("finished blitting sprite\n");
-   
 
     switch (currState) {
         case TOP_MENU:
@@ -199,15 +210,71 @@ void GI_Reckoner::renderRdpq() {
             break;
         
         case INV_STATE:
-            
-            //
-            rdpq_text_printf(&(rdpq_textparms_t) {
-                .style_id=FONTSTYLE_ORANGE,
-            }, FONT_PIXELFRAKTUR_16, display_get_width()/2.0f-20, display_get_height()/2.0f, std::to_string(invMenu_t.invNum).c_str());
-            //
-            //rdpq_mode_push();
-            glyphDrawer->drawGlyph(invMenu_t.invNum, display_get_width()/2.0f+15, display_get_height()/2.0f-10, RGBA32(0xF8, 0x7D, 0x36, 0xFF), invMenu_t.scale);
-            //rdpq_mode_pop();
+
+            if(global::thePlayer->inventory_.items->size() > 0) {
+                rdpq_set_mode_fill(RGBA32(0xF8, 0x7D, 0x36, 0xFF));
+
+                rdpq_fill_rectangle(
+                    SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
+                    SCREEN_UPPER_LEFT_Y + (invMenu_t.inventoryIndex - 0.5) * INVENTORY_LINE_HEIGHT,
+                    SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH + INVENTORY_NAME_TEXT_WIDTH,
+                    SCREEN_UPPER_LEFT_Y + (invMenu_t.inventoryIndex + 0.5) * INVENTORY_LINE_HEIGHT
+                );
+            }
+
+            int i = 0;
+
+            rdpq_set_mode_standard();
+            rdpq_mode_alphacompare(1);
+
+            for(auto& [key, value] : *playerInv) {
+                if(i >= invMenu_t.slotsSkipped && i < invMenu_t.slotsSkipped + INV_SLOTS_TO_DISPLAY){
+                    if(inventoryLookup->getItem(key).itemSprite) {
+                        //item icon
+                        rdpq_sprite_blit(
+                            inventoryLookup->getItem(key).itemSprite, 
+                            SCREEN_UPPER_LEFT_X, 
+                            SCREEN_UPPER_LEFT_Y + (i - invMenu_t.slotsSkipped)*INVENTORY_LINE_HEIGHT, 
+                            &(rdpq_blitparms_t){
+                                .cx = 8,
+                                .cy = 8,
+                            }
+                        );
+
+                        //item name
+                        rdpq_text_printf(
+                            &(rdpq_textparms_t) {
+                                .style_id= (i - invMenu_t.slotsSkipped) == invMenu_t.inventoryIndex ? FONTSTYLE_BLACK : FONTSTYLE_ORANGE,
+                            }, FONT_PIXELFRAKTUR_16, 
+                            SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
+                            SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * ((i - invMenu_t.slotsSkipped) + 0.25f), 
+                            inventoryLookup->getItem(key).itemName.c_str()
+                        );
+
+                        //item qty
+                        rdpq_text_printf(
+                            &(rdpq_textparms_t) {
+                                .style_id=FONTSTYLE_ORANGE,
+                                .width = QTY_TEXT_BOX_WIDTH,
+                                .align = ALIGN_RIGHT,
+                            }, FONT_PIXELFRAKTUR_16, 
+                            SCREEN_UPPER_RIGHT_X - QTY_GLYPH_WIDTH - QTY_TEXT_BOX_WIDTH, 
+                            SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * ((i - invMenu_t.slotsSkipped) + 0.25f),
+                            std::to_string(value).c_str()
+                        );
+
+                        //item qty glyph
+                        glyphDrawer->drawGlyph(
+                            value, 
+                            SCREEN_UPPER_RIGHT_X - QTY_GLYPH_WIDTH/2.0f, 
+                            SCREEN_UPPER_LEFT_Y + (i - invMenu_t.slotsSkipped)*INVENTORY_LINE_HEIGHT - QTY_GLYPH_WIDTH/2.0f, 
+                            RGBA32(0xF8, 0x7D, 0x36, 0xFF), 
+                            QTY_GLYPH_SCALE
+                        );
+                    }
+                }
+                i++;
+            }
             
             break;
     }

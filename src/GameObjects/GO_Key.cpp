@@ -1,5 +1,6 @@
 #include "GO_Key.h"
 #include "../globals.h"
+#include "../Misc/Inventory.h"
 
 T3DModel* GO_Key::keyModel = nullptr;
 uint8_t GO_Key::instanceCount = 0;
@@ -44,7 +45,9 @@ void GO_Key::update() {
     t3d_mat4_to_fixed(keyMatFP, &keyMat);
 
     if(global::thePlayer->isTouching(position_, objectWidth_)) {
-        global::thePlayer->inventory_.keys++;
+        //global::thePlayer->inventory_.keys++;
+        global::thePlayer->addItem(KEY_ITEM_ID, 1);
+        global::thePlayer->addItem(POTION_ITEM_ID, 94);
         global::gameState->objectList->remove(this);
     }
 }

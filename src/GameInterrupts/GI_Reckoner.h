@@ -1,8 +1,11 @@
 #pragma once
+
 #include <libdragon.h>
 #include "../Fonts.h"
 #include "GameInterrupt.h"
 #include "../Misc/NumberGlyphDrawer.h"
+#include "../Misc/Inventory.h"
+#include <map>
 //#include "../globals.h"
 
 class GI_Reckoner : public GameInterrupt
@@ -35,7 +38,11 @@ protected:
     } topMenu_t;
 
     struct invMenu_s {
-        int invNum;
-        float scale;
+        int inventoryIndex;
+        int slotsSkipped;
     } invMenu_t;
+
+    std::map<int, int>* playerInv;
+
+    Inventory* inventoryLookup;
 };

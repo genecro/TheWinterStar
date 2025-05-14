@@ -48,6 +48,10 @@ void Fonts::fonts_init() {
         .color = RGBA32(0xF8, 0x7D, 0x36, 0xFF),
     });
 
+    rdpq_font_style(pixelfraktur16, FONTSTYLE_BLACK, &(rdpq_fontstyle_t){
+        .color = RGBA32(0x01, 0x01, 0x01, 0xFF),
+    });
+
     rdpq_font_style(tannenberg, FONTSTYLE_WHITE, &(rdpq_fontstyle_t){
         .color = RGBA32(0xFF, 0xFF, 0xFF, 0xFF),
     });

@@ -29,7 +29,7 @@ public:
     struct inventory_t {
         uint8_t keys;
         uint16_t coins;
-        std::map<int, int> items;
+        std::map<int, int>* items;
     } inventory_;
 
     int removeItem(int id, int qty);
