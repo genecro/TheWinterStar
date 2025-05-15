@@ -21,6 +21,12 @@ enum {
     WB_STATE = 2,
 };
 
+enum {
+    ITM_MNU_ABOUT = 0,
+    ITM_MNU_USE = 1,
+    ITM_MNU_BACK = 2,
+};
+
 GI_Reckoner::GI_Reckoner() {
     pauseStr = "Paused";
     pauseInterrupt = true;
@@ -41,6 +47,8 @@ GI_Reckoner::GI_Reckoner() {
 
     invMenu_t.inventoryIndex = 0;
     invMenu_t.slotsSkipped = 0;
+    invMenu_t.displayingDescription = false;
+    invMenu_t.itemMenuEnabled = false;
 
     glyphDrawer = new NumberGlyphDrawer();
 
@@ -100,35 +108,88 @@ void GI_Reckoner::handleInput() {
             break;
         
         case INV_STATE:
-            if(keys.b) {
-                currState = TOP_MENU;
+            if(invMenu_t.displayingDescription) {
+                if(keys.a || keys.b) {
+                    invMenu_t.displayingDescription = false;
+                }
             }
+            else if (invMenu_t.itemMenuEnabled) {
+                if(keys.a) {
+                    switch(invMenu_t.itemMenuIndex) {
+                        case ITM_MNU_ABOUT:
+                            invMenu_t.displayingDescription = true;
+                            break;
 
-            if(keys.start) {
-                timeToDestroy = true;
-            }
+                        case ITM_MNU_USE:
+                            inventoryLookup->getItem(invMenu_t.currItemId).onUse();
+                            break;
 
-            if(keys.a) {
-
-            }
-
-            if(yAxisPressed < 0) {
-                if(invMenu_t.inventoryIndex + invMenu_t.slotsSkipped < global::thePlayer->inventory_.items->size() - 1) {
-                    if(invMenu_t.inventoryIndex == INV_SLOTS_TO_DISPLAY - 1) {
-                        invMenu_t.slotsSkipped++;
+                        case ITM_MNU_BACK:
+                            invMenu_t.itemMenuEnabled = false;
+                            invMenu_t.itemMenuIndex = 0;
+                            invMenu_t.itemMenuHighlightIndex = 0;
+                            break;
                     }
-                    else {
-                        invMenu_t.inventoryIndex++;
+                }
+
+                if(keys.b) {
+                    invMenu_t.itemMenuEnabled = false;
+                    invMenu_t.itemMenuIndex = 0;
+                    invMenu_t.itemMenuHighlightIndex = 0;
+                }
+
+                if(yAxisPressed > 0 || keys.d_up) {
+                    if(invMenu_t.itemMenuIndex > ITM_MNU_ABOUT) {
+                        invMenu_t.itemMenuIndex--;
+                        invMenu_t.itemMenuHighlightIndex--;
+                        if(invMenu_t.itemMenuIndex == ITM_MNU_USE && !inventoryLookup->getItem(invMenu_t.currItemId).canUse) {
+                            invMenu_t.itemMenuIndex--;
+                        }
+                    }
+                }
+                else if(yAxisPressed < 0 || keys.d_down) {
+                    if(invMenu_t.itemMenuIndex < ITM_MNU_BACK) {
+                        invMenu_t.itemMenuIndex++;
+                        invMenu_t.itemMenuHighlightIndex++;
+                        if(invMenu_t.itemMenuIndex == ITM_MNU_USE && !inventoryLookup->getItem(invMenu_t.currItemId).canUse) {
+                            invMenu_t.itemMenuIndex++;
+                        }
                     }
                 }
             }
-            else if(yAxisPressed > 0) {
-                if(invMenu_t.inventoryIndex + invMenu_t.slotsSkipped != 0){
-                    if(invMenu_t.inventoryIndex == 0) {
-                        invMenu_t.slotsSkipped--;
+            else {
+                if(keys.b) {
+                    currState = TOP_MENU;
+                }
+
+                if(keys.start) {
+                    timeToDestroy = true;
+                }
+
+                if(keys.a) {
+                    invMenu_t.itemMenuEnabled = true;
+                    invMenu_t.itemMenuIndex = 0;
+                    invMenu_t.itemMenuHighlightIndex = 0;
+                }
+
+                if(yAxisPressed < 0 || keys.d_down) {
+                    if(invMenu_t.inventoryIndex + invMenu_t.slotsSkipped < playerInv->size() - 1) {
+                        if(invMenu_t.inventoryIndex == INV_SLOTS_TO_DISPLAY - 1) {
+                            invMenu_t.slotsSkipped++;
+                        }
+                        else {
+                            invMenu_t.inventoryIndex++;
+                        }
                     }
-                    else {
-                        invMenu_t.inventoryIndex--;
+                }
+                else if(yAxisPressed > 0 || keys.d_up) {
+                    if(invMenu_t.inventoryIndex + invMenu_t.slotsSkipped != 0){
+                        if(invMenu_t.inventoryIndex == 0) {
+                            invMenu_t.slotsSkipped--;
+                        }
+                        else {
+                            invMenu_t.inventoryIndex--;
+                        }
                     }
                 }
             }
@@ -210,70 +271,188 @@ void GI_Reckoner::renderRdpq() {
             break;
         
         case INV_STATE:
+            if(invMenu_t.displayingDescription || invMenu_t.itemMenuEnabled) {
+                rdpq_set_mode_standard();
+                rdpq_mode_alphacompare(1);
 
-            if(global::thePlayer->inventory_.items->size() > 0) {
-                rdpq_set_mode_fill(RGBA32(0xF8, 0x7D, 0x36, 0xFF));
-
-                rdpq_fill_rectangle(
-                    SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
-                    SCREEN_UPPER_LEFT_Y + (invMenu_t.inventoryIndex - 0.5) * INVENTORY_LINE_HEIGHT,
-                    SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH + INVENTORY_NAME_TEXT_WIDTH,
-                    SCREEN_UPPER_LEFT_Y + (invMenu_t.inventoryIndex + 0.5) * INVENTORY_LINE_HEIGHT
+                //item icon
+                rdpq_sprite_blit(
+                    inventoryLookup->getItem(invMenu_t.currItemId).itemSprite, 
+                    SCREEN_UPPER_LEFT_X, 
+                    SCREEN_UPPER_LEFT_Y, 
+                    &(rdpq_blitparms_t){
+                        .cx = 8,
+                        .cy = 8,
+                    }
                 );
-            }
 
-            int i = 0;
+                //item name
+                rdpq_text_printf(
+                    &(rdpq_textparms_t) {
+                        .style_id=FONTSTYLE_ORANGE,
+                    }, FONT_PIXELFRAKTUR_16, 
+                    SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
+                    SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * (0.25f), 
+                    inventoryLookup->getItem(invMenu_t.currItemId).itemName.c_str()
+                );
 
-            rdpq_set_mode_standard();
-            rdpq_mode_alphacompare(1);
+                //item qty
+                rdpq_text_printf(
+                    &(rdpq_textparms_t) {
+                        .style_id=FONTSTYLE_ORANGE,
+                        .width = QTY_TEXT_BOX_WIDTH,
+                        .align = ALIGN_RIGHT,
+                    }, FONT_PIXELFRAKTUR_16, 
+                    SCREEN_UPPER_RIGHT_X - QTY_GLYPH_WIDTH - QTY_TEXT_BOX_WIDTH, 
+                    SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * (0.25f),
+                    std::to_string(playerInv->at(invMenu_t.currItemId)).c_str()
+                );
 
-            for(auto& [key, value] : *playerInv) {
-                if(i >= invMenu_t.slotsSkipped && i < invMenu_t.slotsSkipped + INV_SLOTS_TO_DISPLAY){
-                    if(inventoryLookup->getItem(key).itemSprite) {
-                        //item icon
-                        rdpq_sprite_blit(
-                            inventoryLookup->getItem(key).itemSprite, 
-                            SCREEN_UPPER_LEFT_X, 
-                            SCREEN_UPPER_LEFT_Y + (i - invMenu_t.slotsSkipped)*INVENTORY_LINE_HEIGHT, 
-                            &(rdpq_blitparms_t){
-                                .cx = 8,
-                                .cy = 8,
-                            }
-                        );
+                //item qty glyph
+                glyphDrawer->drawGlyph(
+                    playerInv->at(invMenu_t.currItemId), 
+                    SCREEN_UPPER_RIGHT_X - QTY_GLYPH_WIDTH/2.0f, 
+                    SCREEN_UPPER_LEFT_Y - QTY_GLYPH_WIDTH/2.0f, 
+                    RGBA32(0xF8, 0x7D, 0x36, 0xFF), 
+                    QTY_GLYPH_SCALE
+                );
 
-                        //item name
+                if(invMenu_t.displayingDescription) {
+                    int nbytes = inventoryLookup->getItem(invMenu_t.currItemId).itemDesc.length();
+
+                    rdpq_paragraph_t *desc = rdpq_paragraph_build(&(rdpq_textparms_t) {
+                        .style_id=FONTSTYLE_ORANGE,
+                        .width = SCREEN_UPPER_RIGHT_X - SCREEN_UPPER_LEFT_X,
+                        .wrap = WRAP_WORD,
+                    }, FONT_PIXELFRAKTUR_16, inventoryLookup->getItem(invMenu_t.currItemId).itemDesc.c_str(), &nbytes);
+
+                    rdpq_paragraph_render(desc, SCREEN_UPPER_LEFT_X, SCREEN_UPPER_LEFT_Y + 2*INVENTORY_LINE_HEIGHT);
+                    rdpq_paragraph_free(desc);
+                }
+                else if(invMenu_t.itemMenuEnabled) {
+                    rdpq_set_mode_fill(RGBA32(0xF8, 0x7D, 0x36, 0xFF));
+
+                    rdpq_fill_rectangle(
+                        SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
+                        SCREEN_UPPER_LEFT_Y + (invMenu_t.itemMenuHighlightIndex + 0.75) * INVENTORY_LINE_HEIGHT,
+                        SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH + INVENTORY_NAME_TEXT_WIDTH,
+                        SCREEN_UPPER_LEFT_Y + (invMenu_t.itemMenuHighlightIndex + 1.75) * INVENTORY_LINE_HEIGHT
+                    );
+
+                    int i = 0;
+
+                    rdpq_text_printf(
+                        &(rdpq_textparms_t) {
+                            .style_id= invMenu_t.itemMenuHighlightIndex == i ? FONTSTYLE_BLACK : FONTSTYLE_ORANGE,
+                        }, FONT_PIXELFRAKTUR_16, 
+                        SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
+                        SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * (i + 1.5f), 
+                        "About"
+                    );
+
+                    i++;
+
+                    if(inventoryLookup->getItem(invMenu_t.currItemId).canUse) {
                         rdpq_text_printf(
                             &(rdpq_textparms_t) {
-                                .style_id= (i - invMenu_t.slotsSkipped) == invMenu_t.inventoryIndex ? FONTSTYLE_BLACK : FONTSTYLE_ORANGE,
+                                .style_id= invMenu_t.itemMenuHighlightIndex == i ? FONTSTYLE_BLACK : FONTSTYLE_ORANGE,
                             }, FONT_PIXELFRAKTUR_16, 
                             SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
-                            SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * ((i - invMenu_t.slotsSkipped) + 0.25f), 
-                            inventoryLookup->getItem(key).itemName.c_str()
+                            SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * (i + 1.5f), 
+                            inventoryLookup->getItem(invMenu_t.currItemId).useString.c_str()
                         );
-
-                        //item qty
-                        rdpq_text_printf(
-                            &(rdpq_textparms_t) {
-                                .style_id=FONTSTYLE_ORANGE,
-                                .width = QTY_TEXT_BOX_WIDTH,
-                                .align = ALIGN_RIGHT,
-                            }, FONT_PIXELFRAKTUR_16, 
-                            SCREEN_UPPER_RIGHT_X - QTY_GLYPH_WIDTH - QTY_TEXT_BOX_WIDTH, 
-                            SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * ((i - invMenu_t.slotsSkipped) + 0.25f),
-                            std::to_string(value).c_str()
-                        );
-
-                        //item qty glyph
-                        glyphDrawer->drawGlyph(
-                            value, 
-                            SCREEN_UPPER_RIGHT_X - QTY_GLYPH_WIDTH/2.0f, 
-                            SCREEN_UPPER_LEFT_Y + (i - invMenu_t.slotsSkipped)*INVENTORY_LINE_HEIGHT - QTY_GLYPH_WIDTH/2.0f, 
-                            RGBA32(0xF8, 0x7D, 0x36, 0xFF), 
-                            QTY_GLYPH_SCALE
-                        );
+                        i++;
                     }
+
+                    rdpq_text_printf(
+                        &(rdpq_textparms_t) {
+                            .style_id= invMenu_t.itemMenuHighlightIndex == i ? FONTSTYLE_BLACK : FONTSTYLE_ORANGE,
+                        }, FONT_PIXELFRAKTUR_16, 
+                        SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
+                        SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * (i + 1.5f), 
+                        "Back"
+                    );
+
+                    /*rdpq_set_mode_fill(RGBA32(0xF8, 0x7D, 0x36, 0xFF));
+
+                    rdpq_fill_rectangle(
+                        SCREEN_UPPER_LEFT_X, 
+                        SCREEN_UPPER_LEFT_Y + (0.5) * INVENTORY_LINE_HEIGHT,
+                        SCREEN_UPPER_RIGHT_X,///SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH + INVENTORY_NAME_TEXT_WIDTH,
+                        SCREEN_UPPER_LEFT_Y + (5.5) * INVENTORY_LINE_HEIGHT
+                    );*/
                 }
-                i++;
+            }
+            else {
+                if(playerInv->size() > 0) {
+                    rdpq_set_mode_fill(RGBA32(0xF8, 0x7D, 0x36, 0xFF));
+
+                    rdpq_fill_rectangle(
+                        SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
+                        SCREEN_UPPER_LEFT_Y + (invMenu_t.inventoryIndex - 0.5) * INVENTORY_LINE_HEIGHT,
+                        SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH + INVENTORY_NAME_TEXT_WIDTH,
+                        SCREEN_UPPER_LEFT_Y + (invMenu_t.inventoryIndex + 0.5) * INVENTORY_LINE_HEIGHT
+                    );
+                }
+
+                int i = 0;
+
+                rdpq_set_mode_standard();
+                rdpq_mode_alphacompare(1);
+
+                for(auto& [key, value] : *playerInv) {
+                    if(i >= invMenu_t.slotsSkipped && i < invMenu_t.slotsSkipped + INV_SLOTS_TO_DISPLAY){
+                        
+                        if(invMenu_t.inventoryIndex == i-invMenu_t.slotsSkipped) {
+                            invMenu_t.currItemId = key;
+                        }
+
+                        if(inventoryLookup->getItem(key).itemSprite) {
+                            //item icon
+                            rdpq_sprite_blit(
+                                inventoryLookup->getItem(key).itemSprite, 
+                                SCREEN_UPPER_LEFT_X, 
+                                SCREEN_UPPER_LEFT_Y + (i - invMenu_t.slotsSkipped)*INVENTORY_LINE_HEIGHT, 
+                                &(rdpq_blitparms_t){
+                                    .cx = 8,
+                                    .cy = 8,
+                                }
+                            );
+
+                            //item name
+                            rdpq_text_printf(
+                                &(rdpq_textparms_t) {
+                                    .style_id= (i - invMenu_t.slotsSkipped) == invMenu_t.inventoryIndex ? FONTSTYLE_BLACK : FONTSTYLE_ORANGE,
+                                }, FONT_PIXELFRAKTUR_16, 
+                                SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH, 
+                                SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * ((i - invMenu_t.slotsSkipped) + 0.25f), 
+                                inventoryLookup->getItem(key).itemName.c_str()
+                            );
+
+                            //item qty
+                            rdpq_text_printf(
+                                &(rdpq_textparms_t) {
+                                    .style_id=FONTSTYLE_ORANGE,
+                                    .width = QTY_TEXT_BOX_WIDTH,
+                                    .align = ALIGN_RIGHT,
+                                }, FONT_PIXELFRAKTUR_16, 
+                                SCREEN_UPPER_RIGHT_X - QTY_GLYPH_WIDTH - QTY_TEXT_BOX_WIDTH, 
+                                SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * ((i - invMenu_t.slotsSkipped) + 0.25f),
+                                std::to_string(value).c_str()
+                            );
+
+                            //item qty glyph
+                            glyphDrawer->drawGlyph(
+                                value, 
+                                SCREEN_UPPER_RIGHT_X - QTY_GLYPH_WIDTH/2.0f, 
+                                SCREEN_UPPER_LEFT_Y + (i - invMenu_t.slotsSkipped)*INVENTORY_LINE_HEIGHT - QTY_GLYPH_WIDTH/2.0f, 
+                                RGBA32(0xF8, 0x7D, 0x36, 0xFF), 
+                                QTY_GLYPH_SCALE
+                            );
+                        }
+                    }
+                    i++;
+                }
             }
             
             break;

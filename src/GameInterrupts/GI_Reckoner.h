@@ -40,6 +40,11 @@ protected:
     struct invMenu_s {
         int inventoryIndex;
         int slotsSkipped;
+        int currItemId;
+        bool itemMenuEnabled;
+        bool displayingDescription;
+        uint8_t itemMenuIndex;
+        uint8_t itemMenuHighlightIndex;
     } invMenu_t;
 
     std::map<int, int>* playerInv;

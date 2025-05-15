@@ -17,6 +17,7 @@ enum {
 struct inventoryItem {
     std::string itemName;
     std::string itemDesc;
+    std::string useString;
     bool canUse;
     bool canDiscard;
     sprite_t* itemSprite;
