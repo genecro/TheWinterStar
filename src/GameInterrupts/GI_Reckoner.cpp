@@ -372,15 +372,6 @@ void GI_Reckoner::renderRdpq() {
                         SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * (i + 1.5f), 
                         "Back"
                     );
-
-                    /*rdpq_set_mode_fill(RGBA32(0xF8, 0x7D, 0x36, 0xFF));
-
-                    rdpq_fill_rectangle(
-                        SCREEN_UPPER_LEFT_X, 
-                        SCREEN_UPPER_LEFT_Y + (0.5) * INVENTORY_LINE_HEIGHT,
-                        SCREEN_UPPER_RIGHT_X,///SCREEN_UPPER_LEFT_X + INVENTORY_ICON_WIDTH + INVENTORY_NAME_TEXT_WIDTH,
-                        SCREEN_UPPER_LEFT_Y + (5.5) * INVENTORY_LINE_HEIGHT
-                    );*/
                 }
             }
             else {
