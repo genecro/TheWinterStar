@@ -219,29 +219,52 @@ void GI_Reckoner::renderRdpq() {
     rdpq_sync_pipe();
     rdpq_set_mode_standard();
     rdpq_mode_alphacompare(1);
-    rdpq_sprite_blit(bgSprite, display_get_width()/2.0f, display_get_height()/2.0f, &(rdpq_blitparms_t){
-        .cx = bgSprite->width/2.0,
-        .cy = bgSprite->height/2.0,
-    });
 
-    rdpq_sprite_blit(topMenu_t.index == 0 ? mapSprite : mapSpriteDark, display_get_width()/4.0f, display_get_height()/3.0f, &(rdpq_blitparms_t){
-        .cx=8,
-        .cy=8,
-        .scale_x=2,
-        .scale_y=2,
-    });
-    rdpq_sprite_blit(topMenu_t.index == 1 ? invSprite : invSpriteDark, display_get_width()/4.0f, display_get_height()/2.0f, &(rdpq_blitparms_t){
-        .cx=8,
-        .cy=8,
-        .scale_x=2,
-        .scale_y=2,
-    });
-    rdpq_sprite_blit(topMenu_t.index == 2 ? wbSprite : wbSpriteDark, display_get_width()/4.0f, 2.0f*display_get_height()/3.0f, &(rdpq_blitparms_t){
-        .cx=8,
-        .cy=8,
-        .scale_x=2,
-        .scale_y=2,
-    });
+    rdpq_sprite_blit(
+        bgSprite, 
+        display_get_width()/2.0f, 
+        display_get_height()/2.0f, 
+        &(rdpq_blitparms_t){
+            .cx = bgSprite->width/2.0,
+            .cy = bgSprite->height/2.0,
+        }
+    );
+
+    rdpq_sprite_blit(
+        topMenu_t.index == 0 ? mapSprite : mapSpriteDark, 
+        display_get_width()/4.0f, 
+        display_get_height()/3.0f, 
+        &(rdpq_blitparms_t){
+            .cx=8,
+            .cy=8,
+            .scale_x=2,
+            .scale_y=2,
+        }
+    );
+
+    rdpq_sprite_blit(
+        topMenu_t.index == 1 ? invSprite : invSpriteDark, 
+        display_get_width()/4.0f, 
+        display_get_height()/2.0f, 
+        &(rdpq_blitparms_t){
+            .cx=8,
+            .cy=8,
+            .scale_x=2,
+            .scale_y=2,
+        }
+    );
+
+    rdpq_sprite_blit(
+        topMenu_t.index == 2 ? wbSprite : wbSpriteDark, 
+        display_get_width()/4.0f, 
+        2.0f*display_get_height()/3.0f, 
+        &(rdpq_blitparms_t){
+            .cx=8,
+            .cy=8,
+            .scale_x=2,
+            .scale_y=2,
+        }
+    );
 
     switch (currState) {
         case TOP_MENU:
@@ -272,8 +295,13 @@ void GI_Reckoner::renderRdpq() {
         
         case INV_STATE:
             if(invMenu_t.displayingDescription || invMenu_t.itemMenuEnabled) {
+                //rdpq_set_mode_standard();
+                //rdpq_mode_alphacompare(1);
+                //rdpq_mode_blender(RDPQ_BLENDER_MULTIPLY);
                 rdpq_set_mode_standard();
+                rdpq_mode_combiner(RDPQ_COMBINER_TEX_FLAT);
                 rdpq_mode_alphacompare(1);
+                rdpq_set_prim_color(RGBA32(0xF8, 0x7D, 0x36, 0xFF)); //temporary fix, item sprite appears white without this - why?
 
                 //item icon
                 rdpq_sprite_blit(
@@ -389,7 +417,9 @@ void GI_Reckoner::renderRdpq() {
                 int i = 0;
 
                 rdpq_set_mode_standard();
+                rdpq_mode_combiner(RDPQ_COMBINER_TEX_FLAT);
                 rdpq_mode_alphacompare(1);
+                rdpq_set_prim_color(RGBA32(0xF8, 0x7D, 0x36, 0xFF)); //temporary fix, item sprite appears white without this - why?
 
                 for(auto& [key, value] : *playerInv) {
                     if(i >= invMenu_t.slotsSkipped && i < invMenu_t.slotsSkipped + INV_SLOTS_TO_DISPLAY){
@@ -431,7 +461,7 @@ void GI_Reckoner::renderRdpq() {
                                 SCREEN_UPPER_LEFT_Y + INVENTORY_LINE_HEIGHT * ((i - invMenu_t.slotsSkipped) + 0.25f),
                                 std::to_string(value).c_str()
                             );
-
+                            
                             //item qty glyph
                             glyphDrawer->drawGlyph(
                                 value, 
@@ -445,7 +475,6 @@ void GI_Reckoner::renderRdpq() {
                     i++;
                 }
             }
-            
             break;
     }
 }

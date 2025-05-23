@@ -22,8 +22,6 @@ NumberGlyphDrawer::~NumberGlyphDrawer() {
 }
 
 void NumberGlyphDrawer::drawGlyph(int num, float xUL, float yUL, color_t color, float scale) {
-    num %= 10000;
-
     rdpq_set_mode_standard();
     rdpq_mode_combiner(RDPQ_COMBINER_TEX_FLAT);
     

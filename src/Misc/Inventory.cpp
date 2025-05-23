@@ -5,7 +5,7 @@ Inventory::Inventory() {
 
     itemMap->emplace(KEY_ITEM_ID, (inventoryItem){
         .itemName = "Key",
-        .itemDesc = "Opens a locked door",
+        .itemDesc = "Opens a locked Door",
         .useString = "",
         .canUse = false,
         .canDiscard = false,
@@ -14,9 +14,9 @@ Inventory::Inventory() {
     });
 
     itemMap->emplace(POTION_ITEM_ID, (inventoryItem){
-        .itemName = "Potion",
-        .itemDesc = "Bestows 2 health",
-        .useString = "Drink",
+        .itemName = "Salve",
+        .itemDesc = "Bestows 2 Health",
+        .useString = "Put on",
         .canUse = true,
         .canDiscard = true,
         .itemSprite = sprite_load("rom:/sprites/iconPotion.sprite"),
